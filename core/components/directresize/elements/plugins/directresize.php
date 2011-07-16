@@ -1,11 +1,14 @@
 <?php
 /**
- * Handles removal of threads if a Resource is deleted.
+ * DirectResize - applies highslide expander to site images
+ *
+ * Adrian Cherry
+ * github.com/apcherry/directresize 
  * 
  * @package directresize
  */
 /**
-$modx->lexicon->load('directresize:default');
+$modx->lexicon->load('directresize:properties');
 */
 $path = $modx->getOption('cache_path',$scriptProperties,'assets/components/directresize/cache');
 $prefix = $modx->getOption('prefix',$scriptProperties,'dr_');
@@ -27,12 +30,14 @@ $hs_captionEval = $modx->getOption('hs_captionEval',$scriptProperties,'this.thum
 
 if (substr($prefix,-1) != "_") $prefix .= "_";
 
-include "core/components/directresize/elements/plugins/plugin.directresize.php";
+include $modx->getOption('core_path').'components/directresize/elements/plugins/plugin.directresize.php';
 
 $e = &$modx->event;
+
 switch ($e->name) {
     case "OnWebPagePrerender":
         $o = $modx->documentOutput;
+
         
         $reg = "/<img[^>]*>/";  
         preg_match_all($reg, $o, $imgs, PREG_PATTERN_ORDER);
@@ -41,7 +46,9 @@ switch ($e->name) {
             $path_img = preg_replace("/^.+src=('|\")/i","",$imgs[0][$n]);    
             $path_img = preg_replace("/('|\").*$/i","",$path_img);                                                                           
             //-----------------------
+
             if (substr($path_img,0,strlen($path_base)) == $path_base) {                                                                     
+
                 $img = strtolower($imgs[0][$n]);
                 $verif_balise = sizeof(explode("width",$img)) + sizeof(explode("height",$img)) - 2;
                 if ($verif_balise > 0) {
@@ -130,9 +137,10 @@ hs.graphicsDir = \'assets/components/directresize/graphics/\';
                   hs.outlineType = \''.$hs_outlineType.'\';
                   hs.captionEval = \''.$hs_captionEval.'\';
                   hs.lang.creditsText = \''.$hs_credit.'\';</script>';
-        
+
         $o = preg_replace('~(</head>)~i', $head . '\1', $o);
-        $modx->documentOutput = $o;
+        $modx->resource->_output = $o;
+        
         break;
     default :
         return;
