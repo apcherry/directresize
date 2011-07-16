@@ -1,0 +1,17 @@
+Version 1.1 rc1  16/7/2011
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Major updates to get it working under Modx Revo 2.1.1, including
+
+* latest highslide.js fixes problem using Chrome
+* plugin properties moved to plugin properties tab
+* updated lexicon handling
+* document handling fix for revo 2.1.1
+* added highslide border option
+* added option to define caption
+* added option to set the thumbnail size
+* replaced deprecated ereg and eregi php code
+* fixed include path for the plugin for advanced install where the core directory has been relocated.
+
+
+
+
