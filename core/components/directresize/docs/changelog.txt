@@ -1,3 +1,8 @@
+Version 1.1 rc2  20/7/2011
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+* corrected bug with high compression value for png files.
+
+
 Version 1.1 rc1  16/7/2011
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Major updates to get it working under Modx Revo 2.1.1, including
