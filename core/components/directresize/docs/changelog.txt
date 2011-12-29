@@ -1,3 +1,8 @@
+Version 1.1 pl1 28/12/2011
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Updated to work with MODX Revo 2.2
+* fixed bug with antialiasing for png images.Apparently not all php installations include the function imageantialias() so now test for this function before trying to run it. 
+
 Version 1.1 rc2  20/7/2011
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 * corrected bug with high compression value for png files.

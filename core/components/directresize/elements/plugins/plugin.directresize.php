@@ -142,7 +142,10 @@ function directResize($img_src, $img_min_path, $img_min_prefix, $img_min_w, $img
 			} else if ( $img_ext == "png" ){
 				$image_p 	= imagecreatetruecolor($img_min_w_calc, $img_min_h_calc);
 				$image 		= imagecreatefrompng($img_src);
-				imageantialias($image_p,true);											//... define antialiasing mode
+				// not all php installations seem to have imageantialias in the GD package eg Ubuntu - use if available
+                                if ( var_dump(function_exists('imageantialias'))){
+				    imageantialias($image_p,true);
+                                }									//... define antialiasing mode
 				imagealphablending($image_p, false);									//... disable blending mode on transparent image
 				imagesavealpha($image_p,true);											//... set full information for the alpha channel
 				$transparent = imagecolorallocatealpha($image_p, 255, 255, 255, 0);		//... allocate a colour to the alpha channel

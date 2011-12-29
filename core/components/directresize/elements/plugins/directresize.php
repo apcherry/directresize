@@ -1,15 +1,13 @@
-<?php
-/**
+/*
  * DirectResize - applies highslide expander to site images
  *
  * Adrian Cherry
  * github.com/apcherry/directresize 
- * 
  * @package directresize
- */
-/**
-$modx->lexicon->load('directresize:properties');
 */
+
+$modx->lexicon->load('directresize:properties');
+
 $path = $modx->getOption('cache_path',$scriptProperties,'assets/components/directresize/cache');
 $prefix = $modx->getOption('prefix',$scriptProperties,'dr_');
 $r = $modx->getOption('method',$scriptProperties,0);
@@ -27,7 +25,6 @@ $hs_credit = $modx->getOption('hs_credit',$scriptProperties,'Highslide JS');
 $hs_outlineType = $modx->getOption('hs_outlineType',$scriptProperties,'rounded-white');
 $hs_captionEval = $modx->getOption('hs_captionEval',$scriptProperties,'this.thumb.alt');
 
-
 if (substr($prefix,-1) != "_") $prefix .= "_";
 
 include $modx->getOption('core_path').'components/directresize/elements/plugins/plugin.directresize.php';
@@ -36,18 +33,17 @@ $e = &$modx->event;
 
 switch ($e->name) {
     case "OnWebPagePrerender":
-        $o = $modx->documentOutput;
+       $o = &$modx->resource->_output; // get a reference to the output
 
-        
-        $reg = "/<img[^>]*>/";  
-        preg_match_all($reg, $o, $imgs, PREG_PATTERN_ORDER);
-        for($n=0;$n<count($imgs[0]);$n++) {
+       $reg = "/<img[^>]*>/";  
+       preg_match_all($reg, $o, $imgs, PREG_PATTERN_ORDER);
+       for($n=0;$n<count($imgs[0]);$n++) {
             //-----------------------
             $path_img = preg_replace("/^.+src=('|\")/i","",$imgs[0][$n]);    
             $path_img = preg_replace("/('|\").*$/i","",$path_img);                                                                           
             //-----------------------
 
-            if (substr($path_img,0,strlen($path_base)) == $path_base) {                                                                     
+            if (substr($path_img,0,strlen($path_base)) == $path_base) { 
 
                 $img = strtolower($imgs[0][$n]);
                 $verif_balise = sizeof(explode("width",$img)) + sizeof(explode("height",$img)) - 2;
@@ -63,12 +59,14 @@ switch ($e->name) {
                     }
                     //-------------------
                     preg_match("/width *(:|=) *[\"']* *\d+ *[\"']*/",$img,$array);
+                    
                     //mod by Bruno
 		    if ($thumb_usesetting && !empty($thumb_w)){
      			$width = $thumb_w;
      		    }else{
                         $width = preg_replace("/[^0123456789]/","",$array[0]);
                     }
+
                     //-------------------
                     if ($style) {
                         $imgf = preg_replace("/(height|HEIGHT|Height) *: *[0123456789]* *(px)* */i","",$imgs[0][$n]);
@@ -77,15 +75,19 @@ switch ($e->name) {
                         $imgf = preg_replace("/(height|HEIGHT|Height) *= *[\"']* *[0123456789]* *(px)* *[\"']*/i","",$imgs[0][$n]);
                         $imgf = preg_replace("/(width|WIDTH|Width) *= *[\"']* *[0123456789]* *(px)* *[\"']*/i","",$imgf);
                     }
+
                     //-------------------
                     preg_match("/^.+(src|Src|SRC)=('|\")/",$imgf,$path_g);
                     $imgf = preg_replace("/^.+src=('|\")/","",$imgf);
                     preg_match("/('|\").*$/",$imgf,$path_d);
                     //-------------------
+
                     $pathRedim = directResize($path_img,$path,$prefix,$width,$height,$r,$q_jpg,$q_png);
+      
+                               
                     //-------------------
                     $nouvo_lien = $path_g[0].$pathRedim.$path_d[0];
-                    
+
                     ###############################
                     preg_match("/highslide/",strtolower($imgs[0][$n]),$verif_light);
                     if (($lightbox == 1 && $verif_light[0] == "highslide") || ($lightbox == 2 && substr($path_img,0,strlen($path_base)) == $path_base)) {
@@ -114,22 +116,27 @@ switch ($e->name) {
                         } else {
                             $legende = "";
                         }
+                        
                         if ($img_src_w > $width || $img_src_h > $height) {
                             if ($img_src_w > $lightbox_w || $img_src_h > $lightbox_h) {
-                                $pathRedim = directResize($path_img,$path,$prefix,$lightbox_w,$lightbox_h,3,$q_jpg,$q_png);
-                                $nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$pathRedim."' >".$nouvo_lien."</a>";
+                                
+                                //$pathRedim = directResize($path_img,$path,$prefix,$lightbox_w,$lightbox_h,3,$q_jpg,$q_png);
+                                //$nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$pathRedim."' >".$nouvo_lien."</a>";
+                                $nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$path_img."' >".$nouvo_lien."</a>";
                             } else {
                                 $nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$path_img."' >".$nouvo_lien."</a>";
                             }
-
                         }
-                    }
-                    ####################################
+
+ 
+                    } // end lightbox highslide test
 
                     $o = str_replace($imgs[0][$n],$nouvo_lien,$o);
-                }
-            }
-        }
+
+                } // end verif_balise            
+            } // end path_base test
+       } // end for loop
+      
         $head = '<script type="text/javascript" src="assets/components/directresize/js/highslide.packed.js"></script>
 <link rel="stylesheet" type="text/css" href="assets/components/directresize/highslide.css" />
 <script type="text/javascript">
@@ -138,11 +145,11 @@ hs.graphicsDir = \'assets/components/directresize/graphics/\';
                   hs.captionEval = \''.$hs_captionEval.'\';
                   hs.lang.creditsText = \''.$hs_credit.'\';</script>';
 
-        $o = preg_replace('~(</head>)~i', $head . '\1', $o);
-        $modx->resource->_output = $o;
-        
-        break;
+        $o = preg_replace('~(</head>)~i', $head . '\1', $o);  
+       break;
     default :
         return;
         break;
+
+// end switch
 }
