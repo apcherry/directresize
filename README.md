@@ -1,6 +1,6 @@
 ## Direct Resize
 
-A plugin to apply highslide image expansion to MODx Revolution.
+A simple image viewer and gallery plugin for MODx Revolution. This applies lightbox style pop ups to images and library can be selected from either Highslide, Colorbox or prettyPhoto.
 
 [Highslide](http://highslide.com) is a javascript image with several nice features, expand to fit the window, side captions etc.
 
