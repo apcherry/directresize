@@ -1,7 +1,11 @@
 Direct Resize
 ~~~~~~~~~~~~~
 
-A modx revo plugin to apply the highslide (www.highslide.js) image expander to any images in modx Revo.
+A modx revo plugin to apply the a selected image expander to any images in modx Revo. The available packages are available for selection via the plugin properties.
+
+* Highslide
+* Colorbox
+* prettyPhoto
 
 IMPORTANT NOTE: Highslide JS is licensed under a Creative Commons Attribution-NonCommercial 2.5 License. This means you need the author's permission to use Highslide JS on commercial websites.
 

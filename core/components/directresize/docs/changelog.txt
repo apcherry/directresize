@@ -1,3 +1,10 @@
+Version 1.2-rc1 31/12/2011
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Updated to include colorbox and prettyPhoto options for image expansion.
+Added option for slideshow of images.
+Also tidied up some of the code.
+
+
 Version 1.1 pl1 28/12/2011
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Updated to work with MODX Revo 2.2

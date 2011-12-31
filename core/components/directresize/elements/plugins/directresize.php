@@ -1,6 +1,7 @@
+<?php
 /*
  * DirectResize - applies highslide expander to site images
- *
+ * 
  * Adrian Cherry
  * github.com/apcherry/directresize 
  * @package directresize
@@ -15,15 +16,22 @@ $q_jpg = $modx->getOption('jpg_quality',$scriptProperties,85);
 $q_png = $modx->getOption('png_quality',$scriptProperties,8);
 $path_base = $modx->getOption('image_path',$scriptProperties,'assets/images');
 $lightbox = $modx->getOption('enable',$scriptProperties,2);
-$lightbox_w = $modx->getOption('width',$scriptProperties,800);
-$lightbox_h = $modx->getOption('height',$scriptProperties,600);
+$lightbox_w = $modx->getOption('max width',$scriptProperties,800);
+$lightbox_h = $modx->getOption('max height',$scriptProperties,600);
 $thumb_usesetting = $modx->getOption('thumb_usesetting',$scriptProperties,false);
 $thumb_w = $modx->getOption('thumb_w',$scriptProperties,50);
 $thumb_h = $modx->getOption('thumb_h',$scriptProperties,80);
 $thumb_q = $modx->getOption('thumb_q',$scriptProperties,$q_jpg);
 $hs_credit = $modx->getOption('hs_credit',$scriptProperties,'Highslide JS');
-$hs_outlineType = $modx->getOption('hs_outlineType',$scriptProperties,'rounded-white');
-$hs_captionEval = $modx->getOption('hs_captionEval',$scriptProperties,'this.thumb.alt');
+$hs_outlineType = $modx->getOption('Outline type',$scriptProperties,'rounded-white');
+$hs_captionEval = $modx->getOption('Caption source',$scriptProperties,'this.thumb.alt');
+$expander = $modx->getOption('Expander',$scriptProperties,'highslide');
+$cb_style = $modx->getOption('Style',$scriptProperties,'style1');
+$cb_transition = $modx->getOption('Transition',$scriptProperties,'elastic');
+$pp_theme = $modx->getOption('Theme',$scriptProperties,'pp_default');
+$slideshow = ($modx->getOption('Slideshow',$scriptProperties,false))? 'true' : 'false';
+$duration = $modx->getOption('Slide duration',$scriptProperties,2500);
+$opacity = $modx->getOption('Opacity',$scriptProperties,50)/100;
 
 if (substr($prefix,-1) != "_") $prefix .= "_";
 
@@ -86,11 +94,11 @@ switch ($e->name) {
       
                                
                     //-------------------
-                    $nouvo_lien = $path_g[0].$pathRedim.$path_d[0];
+                    $new_link = $path_g[0].$pathRedim.$path_d[0];
 
                     ###############################
-                    preg_match("/highslide/",strtolower($imgs[0][$n]),$verif_light);
-                    if (($lightbox == 1 && $verif_light[0] == "highslide") || ($lightbox == 2 && substr($path_img,0,strlen($path_base)) == $path_base)) {
+                    preg_match("/directresize/",strtolower($imgs[0][$n]),$verif_light);
+                    if (($lightbox == 1 && $verif_light[0] == "directresize") || ($lightbox == 2 && substr($path_img,0,strlen($path_base)) == $path_base)) {
                         $size       = getimagesize($path_img);
                         $img_src_w  = $size[0];
                         $img_src_h  = $size[1];
@@ -118,34 +126,82 @@ switch ($e->name) {
                         }
                         
                         if ($img_src_w > $width || $img_src_h > $height) {
-                            if ($img_src_w > $lightbox_w || $img_src_h > $lightbox_h) {
+			  //if ($img_src_w > $lightbox_w || $img_src_h > $lightbox_h) {
                                 
-                                //$pathRedim = directResize($path_img,$path,$prefix,$lightbox_w,$lightbox_h,3,$q_jpg,$q_png);
-                                //$nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$pathRedim."' >".$nouvo_lien."</a>";
-                                $nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$path_img."' >".$nouvo_lien."</a>";
-                            } else {
-                                $nouvo_lien = "<a class=\"highslide\" onclick=\"return hs.expand(this)\" ".$legende." href='".$path_img."' >".$nouvo_lien."</a>";
-                            }
+                              // select which expander to apply to the graphical element
+			  switch ($expander) {
+			    case "colorbox" :
+			          $new_link = "<a class='colorbox cboxElement' ".$legende." href='".$path_img."' >".$new_link."</a>";
+			          break;
+			    case "prettyphoto" :
+			          $new_link = "<a rel='prettyPhoto[[pp_gal]]' ".$legende." href='".$path_img."' >".$new_link."</a>";
+			          break;
+			    default : //use highslide as the default
+				  $new_link = "<a class='highslide' onclick='return hs.expand(this)' ".$legende." href='".$path_img."' >".$new_link."</a>";
+			  }
+			      //} else {
+			      //$new_link = "<a class='highslide' onclick='return hs.expand(this)' ".$legende." href='".$path_img."' >".$new_link."</a>";
+			      //}
                         }
 
  
                     } // end lightbox highslide test
 
-                    $o = str_replace($imgs[0][$n],$nouvo_lien,$o);
+                    $o = str_replace($imgs[0][$n],$new_link,$o);
 
                 } // end verif_balise            
             } // end path_base test
        } // end for loop
       
-        $head = '<script type="text/javascript" src="assets/components/directresize/js/highslide.packed.js"></script>
-<link rel="stylesheet" type="text/css" href="assets/components/directresize/highslide.css" />
-<script type="text/javascript">
-hs.graphicsDir = \'assets/components/directresize/graphics/\';
-                  hs.outlineType = \''.$hs_outlineType.'\';
-                  hs.captionEval = \''.$hs_captionEval.'\';
-                  hs.lang.creditsText = \''.$hs_credit.'\';</script>';
-
-        $o = preg_replace('~(</head>)~i', $head . '\1', $o);  
+        // select which expander style sheet and java script is required
+       switch ($expander) {
+	  case "colorbox" :
+	    $drStyle = "<link rel='stylesheet' type='text/css' href='assets/components/directresize/colorbox/".$cb_style."/colorbox.css' />\n";
+	    $jsCall = "<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+                       <script type='text/javascript' src='assets/components/directresize/js/jquery.colorbox-min.js'></script>
+                       <script>
+                          jQuery('a.colorbox').colorbox({
+                                 rel:'colorbox',
+                                 opacity:".$opacity.",
+                                 transition:'".$cb_transition."',
+                                 slideshow:".$slideshow.",
+                                 slideshowSpeed:".$duration.",
+                                 maxWidth:".$lightbox_w.",
+                                 maxHeight:".$lightbox_h."});
+                       </script>\n";
+	    break;
+	  
+	  case "prettyphoto" :
+	  $drStyle = "<link rel='stylesheet' type='text/css' href='assets/components/directresize/css/prettyPhoto.css' />\n";
+	    $jsCall = "<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+                       <script type='text/javascript'src='assets/components/directresize/js/jquery.prettyPhoto.js'></script>
+                       <script>
+                       $(document).ready(function(){
+                       $(\"a[rel^='prettyPhoto']\").prettyPhoto({
+                          theme:'".$pp_theme."',
+                          opacity:".$opacity.",
+                          autoplay_slideshow:".$slideshow.",
+                          slideshow:".$duration."});});
+                       </script>\n";
+	    break;
+	  default :// default to highslide settings
+	    $drStyle = "<link rel='stylesheet' type='text/css' href='assets/components/directresize/highslide/highslide.css' />\n";
+	    $jsCall = "<script type='text/javascript' src='assets/components/directresize/js/highslide.packed.js'></script>
+                       <script type='text/javascript'>
+                           hs.graphicsDir = 'assets/components/directresize/highslide/graphics/';
+                           hs.outlineType = '".$hs_outlineType."';
+                           hs.captionEval = '".$hs_captionEval."';
+                           hs.maxWidth = '".$lightbox_w."';
+                           hs.maxHeight = '".$lightbox_h."';
+                           hs.lang.creditsText = '".$hs_credit."';</script>\n";
+	}
+  
+        // add the style sheet to the head of the html file
+        $o = preg_replace('~(</head>)~i', $drStyle . '\1', $o);
+  
+        // add the javascript to the bottom of the page 
+        $o = preg_replace('~(</body>)~i', $jsCall . '\1', $o); 
+  
        break;
     default :
         return;
