@@ -31,7 +31,10 @@ $cb_transition = $modx->getOption('Transition',$scriptProperties,'elastic');
 $pp_theme = $modx->getOption('Theme',$scriptProperties,'pp_default');
 $slideshow = ($modx->getOption('Slideshow',$scriptProperties,false))? 'true' : 'false';
 $duration = $modx->getOption('Slide duration',$scriptProperties,2500);
-$opacity = $modx->getOption('Opacity',$scriptProperties,50)/100;
+$opacity = number_format($modx->getOption('Opacity',$scriptProperties,50)/100,2);
+$captionPosition = $modx->getOption('Caption position',$scriptProperties,'below');
+$largeCaption = $modx->getOption('Large caption',$scriptProperties,120);
+$excludePath = $modx->getOption('Exclude path',$scriptProperties,'assets/images/noresize');
 
 if (substr($prefix,-1) != "_") $prefix .= "_";
 
@@ -42,17 +45,22 @@ $e = &$modx->event;
 switch ($e->name) {
     case "OnWebPagePrerender":
        $o = &$modx->resource->_output; // get a reference to the output
-
+       $foundImage = false; // if no image found then don't insert javascript
+       
+       // search for all the image tags on the page
        $reg = "/<img[^>]*>/";  
        preg_match_all($reg, $o, $imgs, PREG_PATTERN_ORDER);
+  
+       // process each image tag 
        for($n=0;$n<count($imgs[0]);$n++) {
             //-----------------------
             $path_img = preg_replace("/^.+src=('|\")/i","",$imgs[0][$n]);    
             $path_img = preg_replace("/('|\").*$/i","",$path_img);                                                                           
             //-----------------------
-
-            if (substr($path_img,0,strlen($path_base)) == $path_base) { 
-
+            
+	    // process the image if it's in the defined directory 
+            if (substr($path_img,0,strlen($path_base)) == $path_base && substr($path_img,0,strlen($excludePath)) != $excludePath) { 
+                $foundImage = true;
                 $img = strtolower($imgs[0][$n]);
                 $verif_balise = sizeof(explode("width",$img)) + sizeof(explode("height",$img)) - 2;
                 if ($verif_balise > 0) {
@@ -104,6 +112,7 @@ switch ($e->name) {
                         $img_src_h  = $size[1];
                         $alt        = "";
                         $title  = "";
+		        // create the expanded image legend from the title and alt tags, for colorbox and prettyPhoto
                         preg_match("/(alt|Alt|ALT) *= *[\"|'][^\"']*[\"']/",$imgs[0][$n],$array);
                         if ($array[0] <> "") {
                             $alt = preg_replace("/alt *= *[\"|']/i","",$array[0]);
@@ -124,11 +133,15 @@ switch ($e->name) {
                         } else {
                             $legende = "";
                         }
-                        
+		        // work out if the caption is large enough to go into the right hand panel
+		        if ($largeCaption > 0 && ( strlen($title) > $largeCaption || strlen($alt) > $largeCaption )) {
+			    $override = ', { captionOverlay: { position: \'rightpanel\', width: \'250px\' } }';
+		        } else {
+			    $override = '';
+			}
                         if ($img_src_w > $width || $img_src_h > $height) {
-			  //if ($img_src_w > $lightbox_w || $img_src_h > $lightbox_h) {
                                 
-                              // select which expander to apply to the graphical element
+                          // select which expander to apply to the graphical element
 			  switch ($expander) {
 			    case "colorbox" :
 			          $new_link = "<a class='colorbox cboxElement' ".$legende." href='".$path_img."' >".$new_link."</a>";
@@ -137,11 +150,8 @@ switch ($e->name) {
 			          $new_link = "<a rel='prettyPhoto[[pp_gal]]' ".$legende." href='".$path_img."' >".$new_link."</a>";
 			          break;
 			    default : //use highslide as the default
-				  $new_link = "<a class='highslide' onclick='return hs.expand(this)' ".$legende." href='".$path_img."' >".$new_link."</a>";
+			    $new_link = "<a class='highslide' onclick=\"return hs.expand(this".$override.")\" href='".$path_img."' >".$new_link."</a>";
 			  }
-			      //} else {
-			      //$new_link = "<a class='highslide' onclick='return hs.expand(this)' ".$legende." href='".$path_img."' >".$new_link."</a>";
-			      //}
                         }
 
  
@@ -186,21 +196,43 @@ switch ($e->name) {
 	    break;
 	  default :// default to highslide settings
 	    $drStyle = "<link rel='stylesheet' type='text/css' href='assets/components/directresize/highslide/highslide.css' />\n";
-	    $jsCall = "<script type='text/javascript' src='assets/components/directresize/js/highslide.packed.js'></script>
+	    $jsCall = "<script type='text/javascript' src='assets/components/directresize/js/highslide-with-gallery.min.js'></script>
                        <script type='text/javascript'>
                            hs.graphicsDir = 'assets/components/directresize/highslide/graphics/';
                            hs.outlineType = '".$hs_outlineType."';
                            hs.captionEval = '".$hs_captionEval."';
+                           hs.captionOverlay.position = '".$captionPosition."';
+                           hs.dimmingOpacity = ".$opacity.";
+                           hs.numberPosition = 'caption';
+	                   hs.lang.number = 'Image %1 of %2';
                            hs.maxWidth = '".$lightbox_w."';
                            hs.maxHeight = '".$lightbox_h."';
-                           hs.lang.creditsText = '".$hs_credit."';</script>\n";
+                           hs.lang.creditsText = '".$hs_credit."';
+                           </script>\n";
+	    if ( $slideshow == 'true' ) {
+	         $jsCall = $jsCall."<script type='text/javascript'>
+                           hs.addSlideshow({
+	                   interval: ".$duration.",
+	                   repeat: false,
+	                   useControls: true,
+	                   fixedControls: true,
+	                   overlayOptions: {
+		                opacity: ".$opacity.",
+		                position: 'top center',
+		                hideOnMouseOut: true,
+                           }});
+                           </script>\n";
+	    }
+	   
 	}
+        // only add style sheet and javascript if there is an image to resize
+        if ( $foundImage ) {
+            // add the style sheet to the head of the html file
+            $o = preg_replace('~(</head>)~i', $drStyle . '\1', $o);
   
-        // add the style sheet to the head of the html file
-        $o = preg_replace('~(</head>)~i', $drStyle . '\1', $o);
-  
-        // add the javascript to the bottom of the page 
-        $o = preg_replace('~(</body>)~i', $jsCall . '\1', $o); 
+            // add the javascript to the bottom of the page 
+            $o = preg_replace('~(</body>)~i', $jsCall . '\1', $o);
+	}
   
        break;
     default :

@@ -30,3 +30,6 @@ $_lang['dr_opacity_desc'] = 'Set the background grey level, between  0 (white) a
 $_lang['dr_slide_duration_desc'] = 'Set the time between images when running a slideshow, measured in milliseconds';
 $_lang['dr_cb_transistion_desc'] = 'Select the transition type when going from one photo to the next.';
 $_lang['dr_pp_theme_desc'] = 'Select the border theme to apply to the prettyPhoto images';
+$_lang['dr_hs_captionPosition_desc'] = 'Define the position in the image where the caption will appear';
+$_lang['dr_hs_captionMove_desc'] = 'Automatically move large captions to the righthand panel if the caption length exceeds the defined string length.<br>Set integer to zero to disable the move.';
+$_lang['dr_excludePath_desc'] = 'any images in this directory or below will not be resized, useful for keeping logos or similar images, it can be a subdirectory of the image_path if desired';
