@@ -58,6 +58,11 @@ switch ($e->name) {
             $path_img = preg_replace("/('|\").*$/i","",$path_img);                                                                           
             //-----------------------
             
+            /*
+             * Fix by Fi1osof
+             */
+            $path_img = urldecode($path_img);
+            
 	    // process the image if it's in the defined directory 
             if (substr($path_img,0,strlen($path_base)) == $path_base && substr($path_img,0,strlen($excludePath)) != $excludePath) { 
                 $foundImage = true;
@@ -71,7 +76,11 @@ switch ($e->name) {
 		    if ($thumb_usesetting && !empty($thumb_h)){
      			$height = $thumb_h;
      		    }else{
-                        $height = preg_replace("[^0123456789]","",$array[0]);
+                        /*
+                         * Fix by Fi1osof
+                         * Old: $height = preg_replace("[^0123456789]","",$array[0]);
+                         */
+                        $height = preg_replace("/[^0123456789]/","",$array[0]);
                     }
                     //-------------------
                     preg_match("/width *(:|=) *[\"']* *\d+ *[\"']*/",$img,$array);
